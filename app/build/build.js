@@ -4,7 +4,6 @@
 /* eslint quote-props: 0 */
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 const os = require('os');
 const util = require('util');
 const { execSync, spawn: childSpawn } = require('child_process');
@@ -211,10 +210,55 @@ function runTranspilers({ buildPath }) {
   });
 }
 
-async function runRemoveSourceMaps({ buildPath }) {
+async function runUploadSourceMapsToSentry({ buildPath }) {
+  const { SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT } = process.env;
   const mapFiles = glob.sync('**/*.js.map', { cwd: buildPath });
-  mapFiles.forEach((relPath) => fs.unlinkSync(path.join(buildPath, relPath)));
-  console.log(`---> Cleaned up ${mapFiles.length} source map files`);
+
+  const cleanup = () => {
+    mapFiles.forEach((relPath) => fs.unlinkSync(path.join(buildPath, relPath)));
+    console.log(`---> Cleaned up ${mapFiles.length} source map files`);
+  };
+
+  if (!SENTRY_AUTH_TOKEN || !SENTRY_ORG || !SENTRY_PROJECT) {
+    console.log(
+      '---> Skipping Sentry source map upload (set SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT to enable)'
+    );
+    cleanup();
+    return;
+  }
+
+  let SentryCli;
+  try {
+    SentryCli = require('@sentry/cli');
+  } catch (e) {
+    console.log('---> @sentry/cli not found, skipping source map upload');
+    cleanup();
+    return;
+  }
+
+  console.log('---> Uploading source maps to Sentry');
+
+  try {
+    const commitHash = execSync('git rev-parse HEAD').toString().trim().substr(0, 8);
+    const version = `${packageJSON.version}-${commitHash}`;
+    const cli = new SentryCli(null, {
+      authToken: SENTRY_AUTH_TOKEN,
+      org: SENTRY_ORG,
+      project: SENTRY_PROJECT,
+    });
+    await cli.releases.new(version);
+    await cli.releases.uploadSourceMaps(version, {
+      include: [buildPath],
+      urlPrefix: 'app:///',
+      rewrite: true,
+    });
+    await cli.releases.finalize(version);
+    console.log(`---> Source maps uploaded to Sentry release ${version}`);
+  } catch (err) {
+    console.error(`---> Sentry source map upload failed: ${err.message}`);
+  } finally {
+    cleanup();
+  }
 }
 
 function buildPackagerOptions() {
@@ -368,9 +412,8 @@ function buildPackagerOptions() {
     extendInfo: path.resolve(appDir, 'build', 'resources', 'mac', 'extra.plist'),
     extraResource:
       platform === 'darwin'
-        ? [path.resolve(appDir, 'build', 'resources', 'mac', 'new-mail.mp3'), fmHelperPath].filter(
-            Boolean
-          )
+        ? [path.resolve(appDir, 'build', 'resources', 'mac', 'new-mail.mp3'), fmHelperPath]
+            .filter(Boolean)
         : undefined,
     appBundleId: 'com.bettermailspring.bettermailspring',
     afterCopy: [
@@ -379,7 +422,7 @@ function buildPackagerOptions() {
       runUpdateSandboxHelperPermissions,
       runCopySymlinkedPackages,
       runTranspilers,
-      runRemoveSourceMaps,
+      runUploadSourceMapsToSentry,
     ],
   };
 }
@@ -532,56 +575,6 @@ async function createRpmInstaller() {
   console.log(`Created rpm package in ${rpmDir}`);
 }
 
-async function createArchInstaller() {
-  const archName = { x64: 'x86_64', arm64: 'aarch64' }[arch];
-  if (!archName) throw new Error(`Unsupported Arch Linux architecture: ${arch}`);
-
-  const linuxAssetsDir = path.join(buildDir, 'resources', 'linux');
-  const contentsName = `${packageJSON.name}-linux-${arch}`;
-  const archiveName = `${packageJSON.name}-${packageJSON.version}-${archName}.tar.gz`;
-  const data = { ...packageJSON, arch: archName, contentsName, archiveName };
-  writeFromTemplate(
-    path.join(linuxAssetsDir, 'Mailspring.desktop.in'),
-    data,
-    packageJSON.desktopName
-  );
-  writeFromTemplate(
-    path.join(linuxAssetsDir, 'mailspring.metainfo.xml.in'),
-    data,
-    `${packageJSON.name}.metainfo.xml`
-  );
-
-  const archDir = path.join(outputDir, 'arch');
-  fs.mkdirSync(archDir, { recursive: true });
-  const archivePath = path.join(archDir, archiveName);
-  await spawn({
-    cmd: 'tar',
-    args: [
-      '-czf',
-      archivePath,
-      '-C',
-      outputDir,
-      contentsName,
-      packageJSON.desktopName,
-      `${packageJSON.name}.metainfo.xml`,
-      '-C',
-      linuxAssetsDir,
-      'icons',
-    ],
-  });
-  const hash = crypto.createHash('sha256');
-  for await (const chunk of fs.createReadStream(archivePath)) hash.update(chunk);
-  const checksum = hash.digest('hex');
-  writeFromTemplate(
-    path.join(linuxAssetsDir, 'arch', 'PKGBUILD.in'),
-    { ...data, checksum },
-    'arch/PKGBUILD'
-  );
-  // Repacking a prebuilt app does not require its runtime dependencies on the build host.
-  await spawn({ cmd: 'makepkg', args: ['--force', '--nodeps'], opts: { cwd: archDir } });
-  console.log(`Created Arch Linux package in ${archDir}`);
-}
-
 async function main() {
   const archPackage = process.argv.includes('--arch-package');
   if (archPackage && platform !== 'linux') throw new Error('Arch packaging requires Linux');
@@ -595,7 +588,14 @@ async function main() {
   if (platform === 'darwin') {
     await createMacZip();
   } else if (archPackage) {
-    await createArchInstaller();
+    await require('./create-arch-package')({
+      packageJSON,
+      arch,
+      buildDir,
+      outputDir,
+      spawn,
+      writeFromTemplate,
+    });
   } else if (platform === 'linux') {
     await createDebInstaller();
     await createRpmInstaller();

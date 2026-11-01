@@ -231,3 +231,7 @@ smaller functions over commentary; a comment that restates the code should be de
 ## Claude Hooks
 
 A `PostToolUse` hook in `.claude/settings.json` runs `.claude/hooks/lint-edited-file.sh` after each edit to a `.ts`/`.tsx` file under `app/src` or `app/internal_packages`. It runs `eslint --fix` on that one file and reports anything it couldn't fix.
+
+## Fork Maintenance
+
+This repository is BetterMailspring, an offline-only fork that regularly merges upstream Mailspring. Keep it easy to merge, following `docs/upstream-sync.md`: put new fork code in new files, keep edits to upstream files small, and never reformat upstream code. Run `scripts/sync-upstream.sh` to merge upstream.

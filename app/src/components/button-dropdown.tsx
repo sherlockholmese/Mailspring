@@ -70,33 +70,26 @@ export class ButtonDropdown extends React.Component<ButtonDropdownProps, ButtonD
           >
             {this.props.primaryItem}
           </div>
-          {this.props.menu && (
-            <React.Fragment>
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label={localized('More options')}
-                aria-haspopup="menu"
-                aria-expanded={this.state.open !== false}
-                className="secondary-picker"
-                onClick={this.toggleDropdown}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    this.toggleDropdown();
-                  }
-                }}
-              >
-                <RetinaImg
-                  name={'icon-thread-disclosure.png'}
-                  mode={RetinaImg.Mode.ContentIsMask}
-                />
-              </div>
-              <div role="menu" className="secondary-items" onMouseDown={this._onMenuClick}>
-                {menu}
-              </div>
-            </React.Fragment>
-          )}
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label={localized('More options')}
+            aria-haspopup="menu"
+            aria-expanded={this.state.open !== false}
+            className="secondary-picker"
+            onClick={this.toggleDropdown}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggleDropdown();
+              }
+            }}
+          >
+            <RetinaImg name={'icon-thread-disclosure.png'} mode={RetinaImg.Mode.ContentIsMask} />
+          </div>
+          <div role="menu" className="secondary-items" onMouseDown={this._onMenuClick}>
+            {menu}
+          </div>
         </div>
       );
     } else {

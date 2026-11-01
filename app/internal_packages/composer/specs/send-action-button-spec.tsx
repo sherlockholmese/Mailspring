@@ -54,8 +54,7 @@ describe('SendActionButton', function describeBlock() {
     ]);
     const container = renderButton(this.draft);
     expect(container.querySelector('.primary-item').getAttribute('title')).toBe('Send');
-    expect(container.querySelector('.secondary-picker')).toBe(null);
-    expect(container.querySelector('.secondary-items')).toBe(null);
+    expect(container.querySelector('.button-dropdown.no-menu') !== null).toBe(true);
   });
 
   it('is a dropdown', () => {
@@ -67,7 +66,7 @@ describe('SendActionButton', function describeBlock() {
     expect(container.querySelector('.button-dropdown') !== null).toBe(true);
     expect(container.querySelectorAll('button').length).toBe(0);
     expect(container.querySelector('.primary-item').getAttribute('title')).toBe('Send');
-    expect(container.querySelector('.secondary-picker') !== null).toBe(true);
+    expect(container.querySelector('.button-dropdown.no-menu')).toBe(null);
   });
 
   it('has the correct primary item', () => {

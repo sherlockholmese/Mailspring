@@ -20,7 +20,7 @@ const fs = require('fs');
 const IGNORABLE_STREAM_ERROR_CODES = new Set(['EPIPE', 'EROFS', 'EIO', 'ENOSPC', 'EBADF']);
 for (const stream of [process.stdout, process.stderr]) {
   if (stream) {
-    stream.on('error', (error) => {
+    stream.on('error', error => {
       if (error && IGNORABLE_STREAM_ERROR_CODES.has(error.code)) {
         return;
       }
@@ -34,18 +34,18 @@ console.inspect = function consoleInspect(val) {
 };
 
 const { app, session, protocol } = require('electron');
-const path = require('path');
 const packageJSON = require('../../package.json');
+const path = require('path');
 const { developerToolsAvailable } = require('../developer-tools');
 
 if (typeof process.setFdLimit === 'function') {
   process.setFdLimit(1024);
 }
 
-const setupConfigDir = (args) => {
+const setupConfigDir = args => {
   let dirname = packageJSON.productName;
   if (args.devMode) {
-    dirname += '-dev';
+    dirname = `${packageJSON.productName}-dev`;
   }
   if (args.specMode) {
     dirname = `${packageJSON.productName}-spec`;
@@ -84,17 +84,20 @@ const setupErrorLogger = (args = {}) => {
     resourcePath: args.resourcePath,
   });
   process.on('uncaughtException', (error, origin) => errorLogger.reportError(error, { origin }));
-  process.on('unhandledRejection', (reason) => errorLogger.reportError(reason));
+  process.on('unhandledRejection', reason => errorLogger.reportError(reason));
   return errorLogger;
 };
 
-const declareOptions = (argv) => {
+const declareOptions = argv => {
   const optimist = require('optimist');
   const options = optimist(argv);
   options.usage(
     `Mailspring\n\nUsage: mailspring [options] [recipient] [attachment]\n\nRun Mailspring: The open source extensible email client\n\n\`mailspring mailto:johndoe@example.com\` to compose an e-mail to johndoe@example.com.\n\`mailspring ./attachment.txt\` to compose an e-mail with a text file attached.\n\`mailspring --dev\` to start the client in dev mode.\n\`mailspring --test\` to run unit tests.`
   );
-  options.alias('d', 'dev').boolean('d').describe('d', 'Run in development mode.');
+  options
+    .alias('d', 'dev')
+    .boolean('d')
+    .describe('d', 'Run in development mode.');
   options
     .alias('t', 'test')
     .boolean('t')
@@ -111,8 +114,14 @@ const declareOptions = (argv) => {
   options.boolean('enable-crashpad');
   options.boolean('allow-file-access-from-files');
   options.boolean('source-app-id');
-  options.alias('h', 'help').boolean('h').describe('h', 'Print this usage message.');
-  options.alias('l', 'log-file').string('l').describe('l', 'Log all test output to file.');
+  options
+    .alias('h', 'help')
+    .boolean('h')
+    .describe('h', 'Print this usage message.');
+  options
+    .alias('l', 'log-file')
+    .string('l')
+    .describe('l', 'Log all test output to file.');
   options
     .alias('c', 'config-dir-path')
     .string('c')
@@ -128,12 +137,18 @@ const declareOptions = (argv) => {
       'f',
       'Override the default file regex to determine which tests should run (defaults to "-spec.(js|jsx|es6|es)$" )'
     );
-  options.alias('v', 'version').boolean('v').describe('v', 'Print the version.');
-  options.alias('b', 'background').boolean('b').describe('b', 'Start Mailspring in the background');
+  options
+    .alias('v', 'version')
+    .boolean('v')
+    .describe('v', 'Print the version.');
+  options
+    .alias('b', 'background')
+    .boolean('b')
+    .describe('b', 'Start Mailspring in the background');
   return options;
 };
 
-const parseCommandLine = (argv) => {
+const parseCommandLine = argv => {
   const pkg = require('../../package.json');
   const version = `${pkg.version}-${pkg.commitHash}`;
 
@@ -287,7 +302,7 @@ const start = () => {
         secure: true,
         supportFetchAPI: true,
         corsEnabled: true,
-      },
+      }
     },
     {
       // Sandboxed Views; served per-session by view-sessions.ts. `standard` gives each
@@ -297,9 +312,9 @@ const start = () => {
         standard: true,
         secure: true,
         supportFetchAPI: true,
-      },
-    },
-  ]);
+      }
+    }
+  ])
 
   if (handleStartupEventWithSquirrel()) {
     return;
@@ -363,7 +378,10 @@ const start = () => {
   setupCompileCache(configDirPath, options.devMode);
 
   // Must precede `ready`: disableHardwareAcceleration() has no effect afterward.
-  require('./hardware-acceleration-recovery').applyPersistentSoftwareRendering(app, configDirPath);
+  require('./hardware-acceleration-recovery').applyPersistentSoftwareRendering(
+    app,
+    configDirPath
+  );
 
   const onOpenFileBeforeReady = (event, file) => {
     event.preventDefault();
@@ -396,7 +414,7 @@ const start = () => {
           .replace('app.asar', 'app.asar.unpacked'),
         { allowFileAccess: true }
       )
-      .catch((err) => console.error(`Error loading language detection extension: ${err}`));
+      .catch(err => console.error(`Error loading language detection extension: ${err}`));
 
     session.defaultSession.webRequest.onBeforeSendHeaders(o365Filter, (details, callback) => {
       delete details.requestHeaders['Origin'];
@@ -421,9 +439,8 @@ const start = () => {
     });
 
     // eslint-disable-next-line
-    const Application = require(
-      path.join(options.resourcePath, 'src', 'browser', 'application')
-    ).default;
+    const Application = require(path.join(options.resourcePath, 'src', 'browser', 'application'))
+      .default;
     global.application = new Application();
     global.application.start(options);
 

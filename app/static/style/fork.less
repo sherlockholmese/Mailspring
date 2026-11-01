@@ -1,0 +1,14 @@
+// Styles that exist only in BetterMailspring, so index.less needs just one line to load them.
+@import 'ui-variables';
+@import 'linux-headerbar';
+@import 'components/styled-menu';
+
+.button-dropdown.no-menu {
+  .primary-item {
+    border-radius: @border-radius-base;
+  }
+  .secondary-picker,
+  .secondary-items {
+    display: none;
+  }
+}
