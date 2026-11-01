@@ -48,6 +48,16 @@ describe('SendActionButton', function describeBlock() {
     expect(container.querySelector('.button-dropdown') !== null).toBe(true);
   });
 
+  it('has no disclosure arrow when Send is the only action', () => {
+    spyOn(SendActionsStore, 'orderedSendActionsForDraft').andReturn([
+      SendActionsStore.DefaultSendAction,
+    ]);
+    const container = renderButton(this.draft);
+    expect(container.querySelector('.primary-item').getAttribute('title')).toBe('Send');
+    expect(container.querySelector('.secondary-picker')).toBe(null);
+    expect(container.querySelector('.secondary-items')).toBe(null);
+  });
+
   it('is a dropdown', () => {
     spyOn(SendActionsStore, 'orderedSendActionsForDraft').andReturn([
       SendActionsStore.DefaultSendAction,
@@ -57,6 +67,7 @@ describe('SendActionButton', function describeBlock() {
     expect(container.querySelector('.button-dropdown') !== null).toBe(true);
     expect(container.querySelectorAll('button').length).toBe(0);
     expect(container.querySelector('.primary-item').getAttribute('title')).toBe('Send');
+    expect(container.querySelector('.secondary-picker') !== null).toBe(true);
   });
 
   it('has the correct primary item', () => {

@@ -115,6 +115,7 @@ export class SendActionButton extends React.Component<
   };
 
   render() {
+    const otherActions = this.state.sendActions.slice(1);
     return (
       <ButtonDropdown
         className={'btn-send btn-emphasis btn-text'}
@@ -124,12 +125,14 @@ export class SendActionButton extends React.Component<
         primaryClick={this._onPrimaryClick}
         closeOnMenuClick
         menu={
-          <Menu
-            items={this.state.sendActions.slice(1)}
-            itemKey={(actionConfig) => actionConfig.configKey}
-            itemContent={this._renderSendActionItem}
-            onSelect={this._onSendWithAction}
-          />
+          otherActions.length > 0 ? (
+            <Menu
+              items={otherActions}
+              itemKey={(actionConfig) => actionConfig.configKey}
+              itemContent={this._renderSendActionItem}
+              onSelect={this._onSendWithAction}
+            />
+          ) : null
         }
       />
     );
