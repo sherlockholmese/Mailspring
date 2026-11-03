@@ -11,6 +11,7 @@ import {
 } from 'mailspring-exports';
 import MailspringProviderSettings from './mailspring-provider-settings.json';
 import MailcoreProviderSettings from './mailcore-provider-settings.json';
+import { lookupMozillaISPDB } from './mozilla-ispdb';
 import dns, { SrvRecord } from 'dns';
 import {
   GMAIL_CLIENT_ID,
@@ -592,7 +593,7 @@ async function TryThunderbirdAutoconfig(
     account: Account
   ) {
     const details = {
-      host: server.hostname,
+      host: server.hostname.replace('%EMAILDOMAIN%', domain),
       port: server.port,
       username: '',
       security: '',
@@ -633,12 +634,17 @@ async function TryThunderbirdAutoconfig(
     url = `https://${domain}/.well-known/autoconfig/mail/config-v1.1.xml`;
     autoConfig = await getThunderbirdAutoconfig(url);
   }
+  let providerId = domain;
+  if (!mstemplate && !autoConfig?.emailProvider) {
+    const ispdb = await lookupMozillaISPDB(domain, getThunderbirdAutoconfig, mxRecordsForDomain);
+    if (ispdb) ({ config: autoConfig, providerDomain: providerId } = ispdb);
+  }
   // emailProvider could potentially be an array
   // autoConfig can be null if the server returns 200 with an empty/unparseable XML body
   if (autoConfig && autoConfig.emailProvider) {
     let provider = autoConfig.emailProvider;
     if (Array.isArray(provider)) {
-      provider = provider.find((p) => p.$.id === domain);
+      provider = provider.find((p) => p.$.id === providerId);
       if (provider === undefined) {
         return false;
       }

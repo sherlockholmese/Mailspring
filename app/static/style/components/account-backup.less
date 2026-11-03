@@ -1,0 +1,50 @@
+@import 'ui-variables';
+
+.preferences-wrap .container-accounts {
+  .account-list .account-storage {
+    font-size: @font-size-small;
+    color: @text-color-subtle;
+    cursor: default;
+  }
+  .account-list .list-item.selected .account-storage {
+    color: inherit;
+    opacity: 0.8;
+  }
+
+  .accounts-backup {
+    max-width: 800px;
+    margin: @spacing-standard * 2 auto 0;
+    padding-top: @spacing-standard;
+    border-top: 1px solid @border-color-divider;
+
+    h6 {
+      margin-top: 0;
+    }
+    p {
+      color: @text-color-subtle;
+      margin: 0 0 @spacing-half;
+    }
+    .accounts-backup-form {
+      display: flex;
+      flex-direction: column;
+      gap: @spacing-half;
+      max-width: 400px;
+    }
+    .accounts-backup-path {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .accounts-backup-actions {
+      display: flex;
+      gap: @spacing-half;
+    }
+    .accounts-backup-message {
+      margin-top: @spacing-half;
+      font-size: @font-size-small;
+      &.error {
+        color: @color-error;
+      }
+    }
+  }
+}

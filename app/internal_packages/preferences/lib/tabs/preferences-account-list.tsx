@@ -2,6 +2,7 @@ import React, { Component, CSSProperties } from 'react';
 import { localized, Account } from 'mailspring-exports';
 import { RetinaImg, Flexbox, EditableList } from 'mailspring-component-kit';
 import classnames from 'classnames';
+import AccountStorageLabel from './account-storage-label';
 
 interface PreferencesAccountListProps {
   accounts: Account[];
@@ -84,6 +85,7 @@ class PreferencesAccountList extends Component<PreferencesAccountListProps> {
               {accountSub} ({account.displayProvider()})
             </div>
             {this._renderAccountStatus(account)}
+            <AccountStorageLabel accountId={account.id} />
           </div>
         </Flexbox>
       </div>

@@ -46,6 +46,8 @@ the fork kept.
 | Styles | `app/static/style/fork.less`, `linux-headerbar.less`, `components/styled-menu.less` |
 | Menus | `app/src/styled-menu.ts`, installed by one line in `window-bootstrap.ts` |
 | Harper | `app/src/harper-*.ts`, `composer-grammar-check/`, `preferences/lib/tabs/harper-*` |
+| Account backup and storage | `app/src/account-backup.ts`, `account-storage-usage.ts`, `preferences/lib/tabs/preferences-accounts-backup.tsx`, `account-storage-label.tsx` |
+| Mozilla ISPDB lookup | `onboarding/lib/mozilla-ispdb.ts`, called from `TryThunderbirdAutoconfig` |
 | Arch package | `app/build/create-arch-package.js`, `app/build/resources/linux/arch/` |
 | Branding | `app/package.json` names, read through `packageJSON` and `pkg` |
 

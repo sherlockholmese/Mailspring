@@ -3,6 +3,7 @@ import { ipcRenderer } from 'electron';
 import { AccountStore, Actions, Account, OnlineStatusStore } from 'mailspring-exports';
 import PreferencesAccountList from './preferences-account-list';
 import PreferencesAccountDetails from './preferences-account-details';
+import PreferencesAccountsBackup from './preferences-accounts-backup';
 
 interface PreferencesAccountsState {
   accounts: Account[];
@@ -99,6 +100,7 @@ class PreferencesAccounts extends React.Component<
             />
           )}
         </div>
+        <PreferencesAccountsBackup />
       </div>
     );
   }
